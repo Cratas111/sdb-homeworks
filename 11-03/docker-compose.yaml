@@ -1,13 +1,11 @@
-version: '3.7'
-
 services:
-  # Elasticsearch Docker Images: https://www.docker.elastic.co/
   elasticsearch:
     image: elasticsearch:7.17.9
     container_name: elasticsearch
     environment:
       - xpack.security.enabled=false
       - discovery.type=single-node
+      - cluster.name=${CLUSTER_NAME} 
     ulimits:
       memlock:
         soft: -1
@@ -22,6 +20,9 @@ services:
     ports:
       - 9200:9200
       - 9300:9300
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
   kibana:
     container_name: kibana
@@ -32,15 +33,22 @@ services:
       - 5601:5601
     depends_on:
       - elasticsearch
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
   filebeat:
     image: docker.elastic.co/beats/filebeat:7.17.9
     command: --strict.perms=false
     user: root
     volumes:
-      - /projects/test/filebeat.yml:/usr/share/filebeat/filebeat.yml
-      - /var/lib/docker:/var/lib/docker:ro
+      # Безопасный локальный каталог вместо /var/lib/docker
+      - /home/user7213/docker-lib:/var/lib/docker:ro
+      - /home/user7213/git/sdb-homeworks/11-03/filebeat.yml:/usr/share/filebeat/filebeat.yml
       - /var/run/docker.sock:/var/run/docker.sock
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
 volumes:
   elasticsearch-data:
